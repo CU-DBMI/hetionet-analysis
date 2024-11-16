@@ -17,12 +17,11 @@
 # Negar mentioned needing data from a PostgreSQL database archive, `connectivity-search-pg_dump.sql.gz`, which was created as part of https://github.com/greenelab/connectivity-search-backend/blob/main/README.md .
 # The archive is available under https://zenodo.org/records/3978766 . Only the `PathCount` Table is needed in order to extract single metapaths at a time (needed for other work).
 #                                                                                                                   This PR was mentioned as a resource in case it's needed greenelab/connectivity-search-backend#79 .
-#                                                                                                                                                                                                            
+#
 
 # +
 import gzip
 import pathlib
-from typing import List, Optional
 
 import duckdb
 import requests
@@ -133,5 +132,3 @@ parquet.write_table(
     compression="zstd",
 )
 # -
-
-

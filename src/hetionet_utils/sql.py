@@ -1,9 +1,9 @@
-
 """
 Module for dealing with SQL-specific operations
 """
 
 import gzip
+
 
 def extract_and_write_sql_block(
     sql_file: str, sql_start: str, sql_end: str, output_file: str

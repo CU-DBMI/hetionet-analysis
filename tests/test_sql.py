@@ -1,12 +1,16 @@
 """
 Tests for sql.py
 """
-import pytest
-import tempfile
+
 import gzip
 import pathlib
+import tempfile
 from typing import Optional
+
+import pytest
+
 from hetionet_utils.sql import extract_and_write_sql_block
+
 
 @pytest.mark.parametrize(
     "sql_content, sql_start, sql_end, expected_output, expected_return",
@@ -55,7 +59,9 @@ from hetionet_utils.sql import extract_and_write_sql_block
         ),
         # Case 5: Large content, valid block
         (
-            "DROP TABLE old;\n" + ("-- filler\n" * 1000) + """
+            "DROP TABLE old;\n"
+            + ("-- filler\n" * 1000)
+            + """
             CREATE TABLE test (
                 id INT PRIMARY KEY,
                 name TEXT
@@ -72,10 +78,16 @@ from hetionet_utils.sql import extract_and_write_sql_block
     ],
 )
 def test_extract_and_write_sql_block(
-    sql_content: str, sql_start: str, sql_end: str, expected_output: Optional[str], expected_return: bool
+    sql_content: str,
+    sql_start: str,
+    sql_end: str,
+    expected_output: Optional[str],
+    expected_return: bool,
 ):
     # Create temporary input and output files
-    temp_sql_path = pathlib.Path(tempfile.NamedTemporaryFile(delete=False, suffix=".sql.gz").name)
+    temp_sql_path = pathlib.Path(
+        tempfile.NamedTemporaryFile(delete=False, suffix=".sql.gz").name
+    )
     temp_output_path = pathlib.Path(tempfile.NamedTemporaryFile(delete=False).name)
 
     try:
@@ -84,7 +96,9 @@ def test_extract_and_write_sql_block(
             gzipped_file.write(sql_content)
 
         # Run the function
-        result = extract_and_write_sql_block(str(temp_sql_path), sql_start, sql_end, str(temp_output_path))
+        result = extract_and_write_sql_block(
+            str(temp_sql_path), sql_start, sql_end, str(temp_output_path)
+        )
 
         # Assert the return value
         assert result == expected_return
