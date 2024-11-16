@@ -3,43 +3,48 @@
 default_language_version:
   python: python3.11
 repos:
-  - repo: https://github.com/pre-commit/pre-commit-hooks
+-   repo: https://github.com/pre-commit/pre-commit-hooks
     rev: v5.0.0
     hooks:
-      - id: trailing-whitespace
-      - id: end-of-file-fixer
-      - id: check-yaml
-      - id: check-added-large-files
-      - id: detect-private-key
-  - repo: https://github.com/tox-dev/pyproject-fmt
+    -   id: trailing-whitespace
+    -   id: end-of-file-fixer
+    -   id: check-yaml
+    -   id: check-added-large-files
+    -   id: detect-private-key
+-   repo: https://github.com/tox-dev/pyproject-fmt
     rev: "v2.5.0"
     hooks:
-      - id: pyproject-fmt
-  - repo: https://github.com/codespell-project/codespell
+    -   id: pyproject-fmt
+-   repo: https://github.com/codespell-project/codespell
     rev: v2.3.0
     hooks:
-      - id: codespell
+    -   id: codespell
         exclude: |
           (?x)^(
               .*\.lock |
               .*\.csv
           )$
-  - repo: https://github.com/executablebooks/mdformat
+-   repo: https://github.com/executablebooks/mdformat
     rev: 0.7.18
     hooks:
-      - id: mdformat
+    -   id: mdformat
         additional_dependencies:
-          - mdformat-gfm
-  - repo: https://github.com/adrienverge/yamllint
+        -   mdformat-gfm
+-   repo: https://github.com/adrienverge/yamllint
     rev: v1.35.1
     hooks:
-      - id: yamllint
-  - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: "v0.7.2"
+    -   id: yamllint
+        exclude: pre-commit-config.yaml
+-   repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: "v0.7.4"
     hooks:
-      - id: ruff-format
-      - id: ruff
-  - repo: https://github.com/rhysd/actionlint
+    -   id: ruff-format
+    -   id: ruff
+-   repo: https://github.com/rhysd/actionlint
     rev: v1.7.4
     hooks:
-      - id: actionlint
+    -   id: actionlint
+-   repo: https://gitlab.com/vojko.pribudic.foss/pre-commit-update
+    rev: v0.6.0post1
+    hooks:
+    -   id: pre-commit-update

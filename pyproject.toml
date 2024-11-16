@@ -16,6 +16,7 @@ classifiers = [
 dynamic = [ "version" ]
 dependencies = [
   "black>=24.10",
+  "duckdb>=1.1.3",
   "hetmatpy>=0.1",
   "ipywidgets>=8.1.5",
   "isort>=5.13.2",
@@ -85,7 +86,12 @@ test.shell = """
 uv run pre-commit run -a
 uv run pytest
 """
-#
+# run the gene metapath extraction
 run_bioproc_gene_metapath_test.shell = """
 uv run python src/bioprocess_metapath_to_gene_pval_and_dwpc/gather_subset_data_metapath_BPpGdAdG.py
+"""
+# run path count table extraction
+run_pathcount_extract.shell = """
+cd src/connectivity_search_PathCount_table
+source run.sh
 """

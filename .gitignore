@@ -163,3 +163,7 @@ cython_debug/
 
 # data ignores
 src/bioprocess_metapath_to_gene_pval_and_dwpc/data/results
+*.sql.gz
+*.parquet
+*.duckdb
+copy_data*.sql
