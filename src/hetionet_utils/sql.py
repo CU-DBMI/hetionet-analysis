@@ -13,25 +13,36 @@ def extract_and_write_sql_block(
     and writes it to a specified output file.
 
     Args:
-        sql_file (str): The path to the compressed SQL dump file (e.g., .sql.gz).
-        sql_start (str): The start pattern to identify the beginning of the SQL block.
-        sql_end (str): The end pattern to identify the end of the SQL block.
-        output_file (str): The path to the output file where the block will be written.
+        sql_file (str):
+            The path to the compressed SQL dump file (e.g., .sql.gz).
+        sql_start (str):
+            The start pattern to identify the beginning of the SQL block.
+        sql_end (str):
+            The end pattern to identify the end of the SQL block.
+        output_file (str):
+            The path to the output file where the block will be written.
 
     Returns:
-        bool: True if the SQL block was successfully written to the file, False if the block was not found.
+        bool:
+            True if the SQL block was successfully written to the file,
+            False if the block was not found or incomplete.
     """
     with gzip.open(sql_file, "rt") as f:
         in_sql_block = False  # Flag to track whether we are inside the block
-        with open(output_file, "w") as out_file:
-            for line in f:
-                if sql_start in line:
-                    in_sql_block = True  # Start collecting the SQL block
+        temp_content = []  # Temporarily store the lines of the block
 
-                if in_sql_block:
-                    out_file.write(line)  # Write each line directly to the output file
+        for line in f:
+            if sql_start in line:
+                in_sql_block = True  # Start collecting the SQL block
 
-                if in_sql_block and sql_end in line:  # End of the SQL block
-                    return output_file  # Block successfully written
+            if in_sql_block:
+                temp_content.append(line)  # Collect the line
 
-    return None  # Return False if no block was found
+            if in_sql_block and sql_end in line:  # End of the SQL block
+                # Write the collected lines to the output file
+                with open(output_file, "w") as out_file:
+                    out_file.writelines(temp_content)
+                return True  # Block successfully written
+
+    # If we exit the loop without finding the end, the block is incomplete
+    return False

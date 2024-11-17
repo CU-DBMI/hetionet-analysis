@@ -93,5 +93,5 @@ uv run python src/bioprocess_metapath_to_gene_pval_and_dwpc/gather_subset_data_m
 # run path count table extraction
 run_pathcount_extract.shell = """
 cd src/connectivity_search_PathCount_table
-source run.sh
+uv run python get_table.py
 """

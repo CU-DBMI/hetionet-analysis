@@ -84,11 +84,12 @@ def test_extract_and_write_sql_block(
     expected_output: Optional[str],
     expected_return: bool,
 ):
-    # Create temporary input and output files
-    temp_sql_path = pathlib.Path(
-        tempfile.NamedTemporaryFile(delete=False, suffix=".sql.gz").name
-    )
-    temp_output_path = pathlib.Path(tempfile.NamedTemporaryFile(delete=False).name)
+    # Use context managers for temporary files
+    with tempfile.NamedTemporaryFile(
+        delete=False, suffix=".sql.gz"
+    ) as temp_sql_file, tempfile.NamedTemporaryFile(delete=False) as temp_output_file:
+        temp_sql_path = pathlib.Path(temp_sql_file.name)
+        temp_output_path = pathlib.Path(temp_output_file.name)
 
     try:
         # Write the SQL content to a gzipped file
