@@ -8,8 +8,12 @@ import tempfile
 from typing import Optional
 
 import pytest
+from utils import create_temp_file
 
-from hetionet_utils.sql import extract_and_write_sql_block
+from hetionet_utils.sql import (
+    extract_and_write_sql_block,
+    remove_first_and_last_line_of_file,
+)
 
 
 @pytest.mark.parametrize(
@@ -117,3 +121,34 @@ def test_extract_and_write_sql_block(
         # Cleanup
         temp_sql_path.unlink(missing_ok=True)
         temp_output_path.unlink(missing_ok=True)
+
+
+@pytest.mark.parametrize(
+    "file_content, expected_output",
+    [
+        # Case: Normal file with multiple lines
+        ("Header\nLine1\nLine2\nFooter\n", "Line1\nLine2\n"),
+        # Case: File with only header and footer
+        ("Header\nFooter\n", ""),
+        # Case: Empty file
+        ("", ""),
+        # Case: File with only one line
+        ("Header\n", ""),
+        # Case: File with two lines
+        ("Header\nLine1\n", ""),
+    ],
+)
+def test_remove_first_and_last_line_of_file(file_content: str, expected_output: str):
+    # Use the standalone generator to manage the temporary file
+    with create_temp_file(file_content) as file_path:
+        target_path = pathlib.Path(file_path)
+
+        # Invoke the function
+        remove_first_and_last_line_of_file(file_path)
+
+        # Check the output content
+        with target_path.open("r") as modified_file:
+            result = modified_file.read()
+
+        # Assert the result matches the expected output
+        assert result == expected_output

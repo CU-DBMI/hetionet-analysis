@@ -29,7 +29,10 @@ import duckdb
 import requests
 from pyarrow import parquet
 
-from hetionet_utils.sql import extract_and_write_sql_block
+from hetionet_utils.sql import (
+    extract_and_write_sql_block,
+    remove_first_and_last_line_of_file,
+)
 
 # create the data dir
 pathlib.Path("data").mkdir(exist_ok=True)
@@ -47,7 +50,8 @@ sql_file = "data/connectivity-search-pg_dump.sql.gz"
 expected_table_count = 15
 
 # table which is targeted within the sql archive above
-target_table_name = "public.dj_hetmech_app_pathcount"
+target_pathcount_table_name = "public.dj_hetmech_app_pathcount"
+target_identifier_table_name = "public.public.dj_hetmech_app_node"
 
 # duckdb filename
 duckdb_filename = "data/connectivity-search.duckdb"
@@ -88,9 +92,11 @@ with gzip.open(sql_file, "rt") as f:
 # gather the create table statement
 extract_and_write_sql_block(
     sql_file=sql_file,
-    sql_start=f"CREATE TABLE {target_table_name}",
+    sql_start=f"CREATE TABLE {target_pathcount_table_name}",
     sql_end=";",
-    output_file=(create_table_file := f"create_table.{target_table_name}.sql"),
+    output_file=(
+        create_table_file := f"create_table.{target_pathcount_table_name}.sql"
+    ),
 )
 
 # +
@@ -104,38 +110,16 @@ print(create_sql)
 # gather the data for the table
 extract_and_write_sql_block(
     sql_file=sql_file,
-    sql_start=f"COPY {target_table_name}",
+    sql_start=f"COPY {target_pathcount_table_name}",
     sql_end="\\.",
-    output_file=(copy_data_file := f"copy_data.{target_table_name}.sql"),
+    output_file=(copy_data_file := f"copy_data.{target_pathcount_table_name}.sql"),
 )
 
-# +
 # replace the first and last lines of the copy file
 # as these are the header and data termination lines
 # which have no actual values.
-input_file = pathlib.Path(copy_data_file)
-# Temporary file with .tmp extension
-temp_file = input_file.with_suffix(".tmp")
-
-with input_file.open("r") as infile, temp_file.open("w") as outfile:
-    # Skip the first line
-    first_line = next(infile, None)
-
-    # Only proceed if the file is not empty
-    if first_line is not None:
-        # Start with the second line
-        prev_line = next(infile, None)
-        for line in infile:
-            # Write the previous line
-            outfile.write(prev_line)
-            # Update the previous line buffer
-            prev_line = line
-
-        # Note: the last line is in `prev_line` and is not written
-
-# Replace the original file with the temporary file
-temp_file.replace(input_file)
-# -
+copy_data_file = remove_first_and_last_line_of_file(target_file=copy_data_file)
+copy_data_file
 
 # create the table
 with duckdb.connect(duckdb_filename) as ddb:
