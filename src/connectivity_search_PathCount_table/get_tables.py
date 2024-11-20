@@ -108,7 +108,8 @@ extract_and_write_sql_block(
     sql_start=f"CREATE TABLE {target_identifier_table_name}",
     sql_end=";",
     output_file=(
-        create_identifier_table_file := f"create_table.{target_identifier_table_name}.sql"
+        create_identifier_table_file
+        := f"create_table.{target_identifier_table_name}.sql"
     ),
 )
 
