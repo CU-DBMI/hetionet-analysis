@@ -2,6 +2,10 @@
 Utilities for testing
 """
 
+import contextlib
+import pathlib
+import tempfile
+
 
 def sample_generator(data: list[str]):
     """
@@ -17,3 +21,15 @@ def sample_generator(data: list[str]):
     """
     for item in data:
         yield item
+
+
+@contextlib.contextmanager
+def create_temp_file(content: str):
+    """Create a temporary file, yield its path, and clean it up after use."""
+    with tempfile.NamedTemporaryFile(delete=False, mode="w") as temp_file:
+        try:
+            temp_file.write(content)
+            temp_file.close()
+            yield temp_file.name
+        finally:
+            pathlib.Path(temp_file.name).unlink()

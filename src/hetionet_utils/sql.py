@@ -3,6 +3,7 @@ Module for dealing with SQL-specific operations
 """
 
 import gzip
+import pathlib
 
 
 def extract_and_write_sql_block(
@@ -46,3 +47,47 @@ def extract_and_write_sql_block(
 
     # If we exit the loop without finding the end, the block is incomplete
     return False
+
+
+def remove_first_and_last_line_of_file(target_file: str) -> str:
+    """
+    Removes the first and last lines of a file.
+
+    This function processes a file, removing its first and last lines.
+    It assumes the first line is a header and the last line is a data
+    termination line, both of which do not contain actual values.
+
+    The file is modified in place, and a temporary file is used to ensure
+    atomic operation.
+
+    Args:
+        target_file (str):
+            Path to the target file to be processed.
+
+    Returns:
+        str:
+            Path to the modified file.
+    """
+    input_file = pathlib.Path(target_file)
+    temp_file = input_file.with_suffix(".tmp")
+
+    with input_file.open("r") as infile, temp_file.open("w") as outfile:
+        # Skip the first line
+        first_line = next(infile, None)
+
+        # Only proceed if the file is not empty
+        if first_line is not None:
+            # Start with the second line
+            prev_line = next(infile, None)
+            for line in infile:
+                # Write the previous line
+                outfile.write(prev_line)
+                # Update the previous line buffer
+                prev_line = line
+
+            # Note: the last line is in `prev_line` and is not written
+
+    # Replace the original file with the temporary file
+    temp_file.replace(input_file)
+
+    return target_file
