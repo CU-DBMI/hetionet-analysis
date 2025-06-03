@@ -108,7 +108,8 @@ extract_and_write_sql_block(
     sql_start=f"CREATE TABLE {target_identifier_table_name}",
     sql_end=";",
     output_file=(
-        create_identifier_table_file := f"create_table.{target_identifier_table_name}.sql"
+        create_identifier_table_file
+        := f"create_table.{target_identifier_table_name}.sql"
     ),
 )
 
@@ -168,14 +169,14 @@ with duckdb.connect(duckdb_filename) as ddb:
 with duckdb.connect(duckdb_filename) as ddb:
     ddb.execute(
         f"""
-        COPY {target_pathcount_table_name.replace('public.','')}
+        COPY {target_pathcount_table_name.replace("public.", "")}
         FROM '{copy_pathcount_data_file}'
         (DELIMITER '\t', HEADER false);
         """
     )
     ddb.execute(
         f"""
-        COPY {target_identifier_table_name.replace('public.','')}
+        COPY {target_identifier_table_name.replace("public.", "")}
         FROM '{copy_identifier_data_file}'
         (DELIMITER '\t', HEADER false);
         """
