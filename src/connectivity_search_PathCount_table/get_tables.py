@@ -108,8 +108,7 @@ extract_and_write_sql_block(
     sql_start=f"CREATE TABLE {target_identifier_table_name}",
     sql_end=";",
     output_file=(
-        create_identifier_table_file
-        := f"create_table.{target_identifier_table_name}.sql"
+        create_identifier_table_file := f"create_table.{target_identifier_table_name}.sql"
     ),
 )
 
@@ -211,7 +210,22 @@ with duckdb.connect(duckdb_filename) as ddb:
 
 parquet.write_table(
     table=tbl_pathcount,
-    where="data/dj_hetmech_app_pathcount_with_identifiers.parquet",
+    where=(pq_file := "data/dj_hetmech_app_pathcount_with_identifiers.parquet"),
     # compress with zstd for higher compression than snappy
     compression="zstd",
 )
+
+# suggest memory cleanup on tbl_pathcount
+del tbl_pathcount
+# -
+
+# show an example of using the parquet file output
+with duckdb.connect() as ddb:
+    sample = ddb.execute(
+        """
+        SELECT *
+        FROM read_parquet('data/dj_hetmech_app_pathcount_with_identifiers.parquet')
+        LIMIT 5;
+        """
+    ).df()
+sample
