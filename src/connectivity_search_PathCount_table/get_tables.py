@@ -169,14 +169,14 @@ with duckdb.connect(duckdb_filename) as ddb:
 with duckdb.connect(duckdb_filename) as ddb:
     ddb.execute(
         f"""
-        COPY {target_pathcount_table_name.replace('public.','')}
+        COPY {target_pathcount_table_name.replace("public.", "")}
         FROM '{copy_pathcount_data_file}'
         (DELIMITER '\t', HEADER false);
         """
     )
     ddb.execute(
         f"""
-        COPY {target_identifier_table_name.replace('public.','')}
+        COPY {target_identifier_table_name.replace("public.", "")}
         FROM '{copy_identifier_data_file}'
         (DELIMITER '\t', HEADER false);
         """
@@ -211,7 +211,22 @@ with duckdb.connect(duckdb_filename) as ddb:
 
 parquet.write_table(
     table=tbl_pathcount,
-    where="data/dj_hetmech_app_pathcount_with_identifiers.parquet",
+    where=(pq_file := "data/dj_hetmech_app_pathcount_with_identifiers.parquet"),
     # compress with zstd for higher compression than snappy
     compression="zstd",
 )
+
+# suggest memory cleanup on tbl_pathcount
+del tbl_pathcount
+# -
+
+# show an example of using the parquet file output
+with duckdb.connect() as ddb:
+    sample = ddb.execute(
+        """
+        SELECT *
+        FROM read_parquet('data/dj_hetmech_app_pathcount_with_identifiers.parquet')
+        LIMIT 5;
+        """
+    ).df()
+sample
