@@ -1,5 +1,7 @@
 # Hetionet Analysis
 
+[![Software DOI badge](https://zenodo.org/badge/DOI/10.5281/zenodo.15597460.svg)](https://doi.org/10.5281/zenodo.15597460)
+
 Various data analysis performed using [Hetionet](https://het.io/), a [hetnet](https://en.wikipedia.org/wiki/Heterogeneous_network) of biomedical knowledge.
 
 ## Development
