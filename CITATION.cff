@@ -25,18 +25,16 @@ keywords:
   - python
   - hetnets
   - hetionet
-license: BSD-3-Clause# This CITATION.cff reference content was generated from Zotero.
+license: BSD-3-Clause
 references:
   - title: >-
       Node connectivity measurements for Hetionet v1.0 metapaths
-    type: dataset
-    license: Creative Commons Zero v1.0 Universal, Open Access
+    type: data
     version: v1.1
-    languages: 
+    languages:
       - en
-    repository: Zenodo
     url: https://zenodo.org/record/1435833
-    keywords: 
+    keywords:
       - dwpc
       - Hetionet
       - hetmat
@@ -44,7 +42,7 @@ references:
       - metapath
       - path counts
       - permutation
-    authors: 
+    authors:
       - family-names: Himmelstein
         given-names: Daniel
       - family-names: Zietz
@@ -59,20 +57,19 @@ references:
         given-names: Casey
     date-released: 2018-11-06
     date-published: 2018-11-06
-    identifiers: 
+    identifiers:
       - type: doi
         value: 10.5281/ZENODO.1435833
   - title: >-
       Systematic integration of biomedical knowledge prioritizes drugs for repurposing
-    type: journalArticle
-    license: http://creativecommons.org/licenses/by/4.0/
+    type: article
     issn: 2050-084X
-    languages: 
+    languages:
       - en
     pages: e26726
     volume: 6
     url: https://elifesciences.org/articles/26726
-    authors: 
+    authors:
       - family-names: Himmelstein
         given-names: Daniel Scott
       - family-names: Lizee
@@ -92,6 +89,6 @@ references:
       - family-names: Baranzini
         given-names: Sergio E
     date-published: 2017-09-22
-    identifiers: 
+    identifiers:
       - type: doi
         value: 10.7554/eLife.26726
