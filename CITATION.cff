@@ -1,0 +1,97 @@
+---
+cff-version: 1.2.0
+title: hetionet-analysis
+message: >-
+  If you use this software, please cite it using the
+  metadata from the CITATION.cff file.
+type: software
+authors:
+  - given-names: Sutanu
+    family-names: Nandi
+    orcid: "https://orcid.org/0009-0001-5887-999X"
+  - given-names: Negar
+    family-names: Janani
+    orcid: 'https://orcid.org/0009-0000-7308-926X'
+  - given-names: Dave
+    family-names: Bunten
+    orcid: "https://orcid.org/0000-0001-6041-3665"
+  - given-names: Casey
+    family-names: Greene
+    orcid: 'https://orcid.org/0000-0001-8713-9213'
+repository-code: "https://github.com/CU-DBMI/hetionet-analysis"
+abstract: >-
+  Various data analysis performed using Hetionet, a hetnet of biomedical knowledge.
+keywords:
+  - python
+  - hetnets
+  - hetionet
+license: BSD-3-Clause# This CITATION.cff reference content was generated from Zotero.
+references:
+  - title: >-
+      Node connectivity measurements for Hetionet v1.0 metapaths
+    type: dataset
+    license: Creative Commons Zero v1.0 Universal, Open Access
+    version: v1.1
+    languages: 
+      - en
+    repository: Zenodo
+    url: https://zenodo.org/record/1435833
+    keywords: 
+      - dwpc
+      - Hetionet
+      - hetmat
+      - hetnet
+      - metapath
+      - path counts
+      - permutation
+    authors: 
+      - family-names: Himmelstein
+        given-names: Daniel
+      - family-names: Zietz
+        given-names: Michael
+      - family-names: Kloster
+        given-names: Kyle
+      - family-names: Nagle
+        given-names: Michael
+      - family-names: Sullivan
+        given-names: Blair
+      - family-names: Greene
+        given-names: Casey
+    date-released: 2018-11-06
+    date-published: 2018-11-06
+    identifiers: 
+      - type: doi
+        value: 10.5281/ZENODO.1435833
+  - title: >-
+      Systematic integration of biomedical knowledge prioritizes drugs for repurposing
+    type: journalArticle
+    license: http://creativecommons.org/licenses/by/4.0/
+    issn: 2050-084X
+    languages: 
+      - en
+    pages: e26726
+    volume: 6
+    url: https://elifesciences.org/articles/26726
+    authors: 
+      - family-names: Himmelstein
+        given-names: Daniel Scott
+      - family-names: Lizee
+        given-names: Antoine
+      - family-names: Hessler
+        given-names: Christine
+      - family-names: Brueggeman
+        given-names: Leo
+      - family-names: Chen
+        given-names: Sabrina L
+      - family-names: Hadley
+        given-names: Dexter
+      - family-names: Green
+        given-names: Ari
+      - family-names: Khankhanian
+        given-names: Pouya
+      - family-names: Baranzini
+        given-names: Sergio E
+    date-published: 2017-09-22
+    identifiers: 
+      - type: doi
+        value: 10.7554/eLife.26726

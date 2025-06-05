@@ -48,3 +48,8 @@ repos:
     rev: v0.7.0
     hooks:
     -   id: pre-commit-update
+        args: ["--keep", "pre-commit-update", "--keep", "cffconvert"]
+-   repo: https://github.com/citation-file-format/cffconvert
+    rev: b6045d78aac9e02b039703b030588d54d53262ac
+    hooks:
+    -   id: validate-cff
