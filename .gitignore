@@ -167,3 +167,4 @@ src/bioprocess_metapath_to_gene_pval_and_dwpc/data/results
 *.parquet
 *.duckdb
 copy_data*.tsv
+create_table*.sql
