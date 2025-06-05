@@ -26,11 +26,11 @@
 
 # +
 import gzip
+import os
 import pathlib
 
 import duckdb
 import requests
-from pyarrow import parquet
 
 from hetionet_utils.sql import (
     extract_and_write_sql_block,
@@ -81,152 +81,178 @@ pathlib.Path(sql_file).exists()
 
 # show the tables
 count = 0
+create_table_names = []
 with gzip.open(sql_file, "rt") as f:
     for line in f:
         # seek table creation lines
         if "CREATE TABLE" in line:
-            print(line)
+            # append a cleaned up line from the table creation statement
+            # so we may gather the table name.
+            create_table_names.append(
+                line.strip().replace(" (", "").replace("CREATE TABLE ", "")
+            )
             count += 1
             # there are roughly 15 tables
             # so we break here to avoid further processing
             if count == expected_table_count:
                 break
+create_table_names
 
-# gather the create table statement for path count table
-extract_and_write_sql_block(
-    sql_file=sql_file,
-    sql_start=f"CREATE TABLE {target_pathcount_table_name}",
-    sql_end=";",
-    output_file=(
-        create_pathcount_table_file := f"create_table.{target_pathcount_table_name}.sql"
-    ),
-)
+# gather the create table statements for each table
+for table_name in create_table_names:
+    extract_and_write_sql_block(
+        sql_file=sql_file,
+        sql_start=f"CREATE TABLE {table_name}",
+        sql_end=";",
+        output_file=(create_pathcount_table_file := f"create_table.{table_name}.sql"),
+    )
 
-# gather the create table statement for node table
-extract_and_write_sql_block(
-    sql_file=sql_file,
-    sql_start=f"CREATE TABLE {target_identifier_table_name}",
-    sql_end=";",
-    output_file=(
-        create_identifier_table_file
-        := f"create_table.{target_identifier_table_name}.sql"
-    ),
-)
+# show the create table statements
+for table_name in create_table_names:
+    with open(f"create_table.{table_name}.sql", "r") as table_create_sql:
+        table_sql = "".join(table_create_sql.readlines())
 
-# +
-# show the create table statement
-with open(create_pathcount_table_file, "r") as pathcount_file:
-    pathcount_table_sql = "".join(pathcount_file.readlines())
+    print(table_sql)
 
-print(pathcount_table_sql)
+# gather the data for populating the tables
+# note: this can take a while!
+# (we're extracting large portions of TSV data
+# from a single file.)
+for table_name in create_table_names:
+    copy_data_file = f"copy_data.{table_name}.tsv"
 
-# +
-# show the create table statement
-with open(create_identifier_table_file, "r") as identifier_file:
-    identifier_table_sql = "".join(identifier_file.readlines())
+    # only create the file if we don't already have it.
+    if not pathlib.Path(copy_data_file).is_file():
+        extract_and_write_sql_block(
+            sql_file=sql_file,
+            sql_start=f"COPY {table_name}",
+            sql_end="\\.",
+            output_file=copy_data_file,
+        )
+        # replace the first and last lines of the copy files
+        # as these are the header and data termination lines
+        # which have no actual values.
+        remove_first_and_last_line_of_file(target_file=copy_data_file)
 
-print(identifier_table_sql)
-# -
-
-# gather the data for the path count table
-extract_and_write_sql_block(
-    sql_file=sql_file,
-    sql_start=f"COPY {target_pathcount_table_name}",
-    sql_end="\\.",
-    output_file=(
-        copy_pathcount_data_file := f"copy_data.{target_pathcount_table_name}.sql"
-    ),
-)
-
-# gather the data for the identifier table
-extract_and_write_sql_block(
-    sql_file=sql_file,
-    sql_start=f"COPY {target_identifier_table_name}",
-    sql_end="\\.",
-    output_file=(
-        copy_identifier_data_file := f"copy_data.{target_identifier_table_name}.sql"
-    ),
-)
-
-# replace the first and last lines of the copy files
-# as these are the header and data termination lines
-# which have no actual values.
-copy_pathcount_data_file = remove_first_and_last_line_of_file(
-    target_file=copy_pathcount_data_file
-)
-copy_identifier_data_file = remove_first_and_last_line_of_file(
-    target_file=copy_identifier_data_file
-)
-print(copy_pathcount_data_file, copy_identifier_data_file)
-
-# create the path count and identifier tables
-with duckdb.connect(duckdb_filename) as ddb:
-    ddb.execute(pathcount_table_sql.replace("public.", ""))
-    ddb.execute(identifier_table_sql.replace("public.", "").replace("jsonb", "json"))
+# create the tables within a duckdb database
+if not pathlib.Path(duckdb_filename).is_file():
+    with duckdb.connect(duckdb_filename) as ddb:
+        for table_name in create_table_names:
+            with open(f"create_table.{table_name}.sql", "r") as table_create_sql:
+                # read the table creation sql into duckdb execution
+                # replace "public." for table naming, and "jsonb" to
+                # align data typing from postrgres to duckdb (duckdb
+                # includes no "jsonb" type but is compatible with the
+                # insertion data in the form "json").
+                ddb.execute(
+                    "".join(table_create_sql.readlines())
+                    .replace("public.", "")
+                    .replace("jsonb", "json")
+                )
 
 # # copy the data from the files to duckdb database
 # using tab-delimited files.
+# note: this can take a while!
+# (we're ingesting data from TSV format into DuckDB)
 with duckdb.connect(duckdb_filename) as ddb:
-    ddb.execute(
-        f"""
-        COPY {target_pathcount_table_name.replace("public.", "")}
-        FROM '{copy_pathcount_data_file}'
-        (DELIMITER '\t', HEADER false);
-        """
-    )
-    ddb.execute(
-        f"""
-        COPY {target_identifier_table_name.replace("public.", "")}
-        FROM '{copy_identifier_data_file}'
-        (DELIMITER '\t', HEADER false);
-        """
-    )
+    for table_name in create_table_names:
+        # only copy data if we have data to copy
+        if os.path.getsize(copy_data_file := f"copy_data.{table_name}.tsv") > 0:
+            table_name = table_name.replace("public.", "")  # noqa: PLW2901
 
-# +
+            # only populate the table if it hasn't already been
+            # populated.
+            row_count = ddb.execute(f"SELECT COUNT(*) FROM {table_name}").fetchone()[0]
+            if row_count == 0:
+                ddb.execute(
+                    f"""
+                    COPY {table_name}
+                    FROM '{copy_data_file}'
+                    (DELIMITER '\t', HEADER false);
+                    """
+                )
+
 # read and export data to parquet for simpler use
+target_file = "./data/connectivity-search-precalculated-metapath-data.parquet"
 with duckdb.connect(duckdb_filename) as ddb:
-    tbl_pathcount = ddb.execute(
-        """
-        SELECT
-            pathcount.id,
-            pathcount.path_count,
-            pathcount.dwpc,
-            pathcount.p_value,
-            pathcount.metapath_id,
-            pathcount.source_id,
-            source.identifier AS source_identifier,
-            pathcount.target_id,
-            target.identifier AS target_identifier,
-            pathcount.dgp_id
-        FROM
-            dj_hetmech_app_pathcount as pathcount
-        LEFT JOIN
-            dj_hetmech_app_node AS source ON
+    # copy data directly to Parquet from DuckDB
+    ddb.execute(
+        f"""
+        COPY (
+            SELECT
+                pathcount.id,
+                source.identifier AS source_identifier,
+                target.identifier AS target_identifier,
+                pathcount.metapath_id,
+                pathcount.path_count,
+                /* we build an adjusted p_value based on the implementation
+                found here:
+                https://github.com/greenelab/connectivity-search-backend/blob/main/dj_hetmech_app/models.py#L94
+                */
+                CASE
+                    WHEN pathcount.p_value * metapath.n_similar > 1.0 THEN 1.0
+                    ELSE pathcount.p_value * metapath.n_similar
+                END AS adjusted_p_value,
+                pathcount.p_value,
+                pathcount.dwpc,
+                degree.source_degree,
+                degree.target_degree,
+                degree.n_dwpcs,
+                degree.n_nonzero_dwpcs,
+                degree.nonzero_mean,
+                degree.nonzero_sd,
+                pathcount.source_id,
+                pathcount.target_id,
+                pathcount.dgp_id
+            FROM
+                dj_hetmech_app_pathcount as pathcount
+            LEFT JOIN dj_hetmech_app_node AS source ON
                 pathcount.source_id = source.id
-        LEFT JOIN
-            dj_hetmech_app_node AS target ON
-                pathcount.target_id = target.id;
+            LEFT JOIN dj_hetmech_app_node AS target ON
+                pathcount.target_id = target.id
+            LEFT JOIN dj_hetmech_app_degreegroupedpermutation as degree ON
+                pathcount.dgp_id = degree.id
+                AND pathcount.metapath_id = degree.metapath_id
+            LEFT JOIN dj_hetmech_app_metapath as metapath ON
+                pathcount.metapath_id = metapath.abbreviation
+        )
+        TO '{target_file}'
+        (FORMAT parquet, COMPRESSION zstd);
         """
-    ).arrow()
+    )
+# confirm that we have the file
+pathlib.Path("./data/connectivity-search-precalculated-metapath-data.parquet").is_file()
 
-parquet.write_table(
-    table=tbl_pathcount,
-    where=(pq_file := "data/dj_hetmech_app_pathcount_with_identifiers.parquet"),
-    # compress with zstd for higher compression than snappy
-    compression="zstd",
-)
-
-# suggest memory cleanup on tbl_pathcount
-del tbl_pathcount
-# -
+# show an row count using the parquet file output
+with duckdb.connect() as ddb:
+    count = ddb.execute(
+        f"""
+        SELECT COUNT(*)
+        FROM read_parquet('{target_file}')
+        """
+    ).df()
+count
 
 # show an example of using the parquet file output
 with duckdb.connect() as ddb:
     sample = ddb.execute(
-        """
+        f"""
         SELECT *
-        FROM read_parquet('data/dj_hetmech_app_pathcount_with_identifiers.parquet')
+        FROM read_parquet('{target_file}')
         LIMIT 5;
+        """
+    ).df()
+sample
+
+# show results in alignment with:
+# https://het.io/search/?source=34901&target=4145
+with duckdb.connect() as ddb:
+    sample = ddb.execute(
+        f"""
+        SELECT *
+        FROM read_parquet('{target_file}')
+        WHERE source_id = 34901
+        AND target_id = 4145;
         """
     ).df()
 sample
