@@ -26,6 +26,10 @@ keywords:
   - hetnets
   - hetionet
 license: BSD-3-Clause
+identifiers:
+  - description: Software DOI
+    type: doi
+    value: "10.5281/zenodo.15597460"
 references:
   - title: >-
       Node connectivity measurements for Hetionet v1.0 metapaths
