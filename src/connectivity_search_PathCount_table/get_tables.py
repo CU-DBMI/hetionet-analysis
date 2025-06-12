@@ -174,52 +174,70 @@ with duckdb.connect(duckdb_filename) as ddb:
 
 # read and export data to parquet for simpler use
 target_file = "./data/connectivity-search-precalculated-metapath-data.parquet"
-with duckdb.connect(duckdb_filename) as ddb:
-    # copy data directly to Parquet from DuckDB
-    ddb.execute(
-        f"""
-        COPY (
-            SELECT
-                pathcount.id,
-                source.identifier AS source_identifier,
-                target.identifier AS target_identifier,
-                pathcount.metapath_id,
-                pathcount.path_count,
-                /* we build an adjusted p_value based on the implementation
-                found here:
-                https://github.com/greenelab/connectivity-search-backend/blob/main/dj_hetmech_app/models.py#L94
-                */
-                CASE
-                    WHEN pathcount.p_value * metapath.n_similar > 1.0 THEN 1.0
-                    ELSE pathcount.p_value * metapath.n_similar
-                END AS adjusted_p_value,
-                pathcount.p_value,
-                pathcount.dwpc,
-                degree.source_degree,
-                degree.target_degree,
-                degree.n_dwpcs,
-                degree.n_nonzero_dwpcs,
-                degree.nonzero_mean,
-                degree.nonzero_sd,
-                pathcount.source_id,
-                pathcount.target_id,
-                pathcount.dgp_id
-            FROM
-                dj_hetmech_app_pathcount as pathcount
-            LEFT JOIN dj_hetmech_app_node AS source ON
-                pathcount.source_id = source.id
-            LEFT JOIN dj_hetmech_app_node AS target ON
-                pathcount.target_id = target.id
-            LEFT JOIN dj_hetmech_app_degreegroupedpermutation as degree ON
-                pathcount.dgp_id = degree.id
-                AND pathcount.metapath_id = degree.metapath_id
-            LEFT JOIN dj_hetmech_app_metapath as metapath ON
-                pathcount.metapath_id = metapath.abbreviation
+if not pathlib.Path(target_file).is_file():
+    with duckdb.connect(duckdb_filename) as ddb:
+        # copy data directly to Parquet from DuckDB
+        ddb.execute(
+            f"""
+            COPY (
+                WITH combinations AS (
+                    SELECT
+                        source.id AS source_id,
+                        target.id AS target_id,
+                        pathcount.metapath_id,
+                        pathcount.id AS pathcount_id,
+                        pathcount.path_count,
+                        pathcount.p_value,
+                        pathcount.dwpc,
+                        pathcount.dgp_id
+                    FROM dj_hetmech_app_node AS source
+                    CROSS JOIN dj_hetmech_app_node AS target
+                    LEFT JOIN dj_hetmech_app_pathcount AS pathcount ON
+                        source.id = pathcount.source_id
+                        AND target.id = pathcount.target_id
+                    WHERE source.id != target.id
+                )
+                SELECT
+                    combinations.pathcount_id,
+                    src.identifier AS source_identifier,
+                    tgt.identifier AS target_identifier,
+                    combinations.metapath_id,
+                    combinations.path_count,
+                    /* we build an adjusted p_value based on the implementation
+                    found here:
+                    https://github.com/greenelab/connectivity-search-backend/blob/main/dj_hetmech_app/models.py#L94
+                    */
+                    CASE
+                        WHEN combinations.p_value * metapath.n_similar > 1.0 THEN 1.0
+                        ELSE combinations.p_value * metapath.n_similar
+                    END AS adjusted_p_value,
+                    combinations.p_value,
+                    combinations.dwpc,
+                    degree.source_degree,
+                    degree.target_degree,
+                    degree.n_dwpcs,
+                    degree.n_nonzero_dwpcs,
+                    degree.nonzero_mean,
+                    degree.nonzero_sd,
+                    combinations.source_id,
+                    combinations.target_id,
+                    combinations.dgp_id
+                FROM
+                    combinations
+                LEFT JOIN dj_hetmech_app_node AS src ON
+                    src.id = combinations.source_id
+                LEFT JOIN dj_hetmech_app_node AS tgt ON
+                    tgt.id = combinations.target_id
+                LEFT JOIN dj_hetmech_app_degreegroupedpermutation AS degree ON
+                    degree.id = combinations.dgp_id
+                    AND degree.metapath_id = combinations.metapath_id
+                LEFT JOIN dj_hetmech_app_metapath AS metapath ON
+                    metapath.abbreviation = combinations.metapath_id
+            )
+            TO '{target_file}'
+            (FORMAT parquet, COMPRESSION zstd);
+            """
         )
-        TO '{target_file}'
-        (FORMAT parquet, COMPRESSION zstd);
-        """
-    )
 # confirm that we have the file
 pathlib.Path("./data/connectivity-search-precalculated-metapath-data.parquet").is_file()
 
