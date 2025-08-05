@@ -9,8 +9,10 @@ import os
 import httpx
 import requests
 
+CONNECTIVITY_SEARCH_API = os.environ.get(
+    "CONNECTIVITY_SEARCH_API", "https://search-api.het.io"
+)
 
-CONNECTIVITY_SEARCH_API = os.environ.get("CONNECTIVITY_SEARCH_API", "https://search-api.het.io")
 
 def get_paths_json(source: int, target: int, metapath: str) -> str:
     """

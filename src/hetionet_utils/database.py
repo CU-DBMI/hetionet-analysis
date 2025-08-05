@@ -3,17 +3,18 @@ Modules for interacting with various databases.
 """
 
 import os
-
 from typing import List, Optional, Self
 
 import pandas as pd
 import requests
 from neo4j import GraphDatabase
 
-
-CONNECTIVITY_SEARCH_API = os.environ.get("CONNECTIVITY_SEARCH_API", "https://search-api.het.io")
+CONNECTIVITY_SEARCH_API = os.environ.get(
+    "CONNECTIVITY_SEARCH_API", "https://search-api.het.io"
+)
 NEO4J_HOST = os.environ.get("NEO4J_HOST", "neo4j.het.io")
 NEO4J_BOLT_PORT = os.environ.get("NEO4J_BOLT_PORT", "7687")
+
 
 class HetionetNeo4j:
     """
