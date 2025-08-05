@@ -21,6 +21,6 @@ import pandas as pd
 
 from hetionet_utils.udf import async_get_complete_metapaths
 
-results = await async_get_complete_metapaths(21400, 32981)
+results = await async_get_complete_metapaths(21400, 32981)  # noqa
 
 pd.DataFrame(results)
