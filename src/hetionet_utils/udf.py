@@ -4,10 +4,13 @@ Creates UDFs for various Het.io API calls.
 
 import asyncio
 import json
+import os
 
 import httpx
 import requests
 
+
+CONNECTIVITY_SEARCH_API = os.environ.get("CONNECTIVITY_SEARCH_API", "https://search-api.het.io")
 
 def get_paths_json(source: int, target: int, metapath: str) -> str:
     """
@@ -15,7 +18,7 @@ def get_paths_json(source: int, target: int, metapath: str) -> str:
     and return it as a raw JSON string.
     """
     url = (
-        f"https://search-api.het.io/v1/paths/"
+        f"{CONNECTIVITY_SEARCH_API}/v1/paths/"
         f"source/{source}/target/{target}/metapath/{metapath}/"
         "?format=json"
     )
@@ -43,7 +46,7 @@ async def fetch_metapaths(
     target: int,
 ) -> list:
     url = (
-        f"https://search-api.het.io/v1/metapaths/"
+        f"{CONNECTIVITY_SEARCH_API}/v1/metapaths/"
         f"source/{source}/target/{target}/"
         "?format=json&complete=true"
     )
@@ -60,7 +63,7 @@ async def fetch_path_count(
     metapath: str,
 ) -> dict:
     url = (
-        f"https://search-api.het.io/v1/paths/"
+        f"{CONNECTIVITY_SEARCH_API}/v1/paths/"
         f"source/{source}/target/{target}/metapath/{metapath}/"
         "?format=json"
     )
