@@ -2,11 +2,18 @@
 Modules for interacting with various databases.
 """
 
+import os
 from typing import List, Optional, Self
 
 import pandas as pd
 import requests
 from neo4j import GraphDatabase
+
+CONNECTIVITY_SEARCH_API = os.environ.get(
+    "CONNECTIVITY_SEARCH_API", "https://search-api.het.io"
+)
+NEO4J_HOST = os.environ.get("NEO4J_HOST", "neo4j.het.io")
+NEO4J_BOLT_PORT = os.environ.get("NEO4J_BOLT_PORT", "7687")
 
 
 class HetionetNeo4j:
@@ -22,7 +29,7 @@ class HetionetNeo4j:
 
     def __init__(
         self: Self,
-        uri: str = "bolt://neo4j.het.io:7687",
+        uri: str = f"bolt://{NEO4J_HOST}:{NEO4J_BOLT_PORT}",
     ) -> None:
         """
         Initialize the HetionetNeo4j class with a connection
@@ -42,7 +49,7 @@ class HetionetNeo4j:
               node.identifier AS identifier
             ORDER BY neo4j_id
             """
-        self.api_base_path = "https://search-api.het.io/v1"
+        self.api_base_path = f"{CONNECTIVITY_SEARCH_API}/v1"
 
     def close(self: Self) -> None:
         """
